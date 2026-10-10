@@ -92,7 +92,6 @@ local function GetCustomTeam(Character)
         Color = Color3.fromRGB(29, 128, 242)
     end
 
-    print(Team)
     return Team, Color
 end
 
