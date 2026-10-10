@@ -58,6 +58,43 @@ local PlayerRemovingConnection
 local InputBeganConnection
 local CurrentRunId = HttpService:GenerateGUID(false)
 
+local function GetCustomHealth(Character)
+    if not Character then return 100, 100 end
+
+    local Hp = Character:GetAttribute("Health") or 100
+    local MaxHp = Character:GetAttribute("MaxHealth") or 100
+    
+    return Hp, MaxHp
+end
+
+local function GetCustomWeapon(Character)
+    if not Character then return nil end
+
+    local WeaponModel = Character:FindFirstChild("WeaponModel")
+    if not WeaponModel then return nil end
+
+    local Equipped = WeaponModel:FindFirstChild("Equipped")
+    if not Equipped or not Equipped:IsA("Model") then return nil end
+
+    local weaponName = Equipped:GetAttribute("WeaponName")
+    return weaponName and tostring(weaponName) or nil
+end
+
+local function GetCustomTeam(Character)
+    if not Character then return "Neutral", Color3.fromRGB(255, 255, 255) end
+
+    local Team = Character:GetAttribute("CharacterName") or "Neutral"
+    local Color = Color3.fromRGB(255, 255, 255)
+
+    if Team == "Anarchist" then
+        Color = Color3.fromRGB(255, 123, 22)
+    elseif Team == "IDF" then
+        Color = Color3.fromRGB(29, 128, 242)
+    end
+
+    return Team, Color
+end
+
 if getgenv().SensoryESP_Unload then
     pcall(getgenv().SensoryESP_Unload)
 end
@@ -172,14 +209,14 @@ end)
 
 local ESPConfig = {
     -- esp checks
-    Enabled = false,
+    Enabled = true,
     Keybind = {
         Enabled = false,
         Key = Enum.KeyCode.Insert,
     },
     Players = false,
     LocalPlayer = false,
-    LimitFPS = 70, -- Set to 0 to disable limit
+    LimitFPS = 120, -- Set to 0 to disable limit
     DynamicBoxes = true,
     DynamicBoxesCheap = false,           -- needs DynamicBoxes enabled, only tracks main parts
     DynamicBoxesIncludeAll = false,      -- needs DynamicBoxes enabled, includes every BasePart in the model
@@ -356,7 +393,7 @@ local ESPConfig = {
     -- chams
     Chams = {
         Enabled = false,
-        Type = "MeshChams", -- "Highlight", "Adornment", or "MeshChams"
+        Type = "Adornment", -- "Highlight", "Adornment", or "MeshChams"
 
         Highlight = {
             FillColor = Color3.fromRGB(255, 255, 255),
@@ -385,175 +422,18 @@ local ESPConfig = {
         },
     },
 
-    -- directories
-    Directories = {
-        --[[{
-                DisplayName = "Part",
-                Path = "workspace.Folder.common3",
-                Multiple = true,
-                Cheap = true,
-                Contains = {},
-                Names = {"Part"}
-            },
-        {
-            DisplayName = "Dummy",
-            Path = "workspace",
-            Multiple = true,
-            Cheap = false,
-            Contains = {},
-            NonHuman = false,
-            NoStatus = false,
-            Names = { "Dummy", "Rig" }
-        },
-        {
-            DisplayName = "UAZ",
-            Path = "workspace",
-            Multiple = true,
-            Cheap = false,
-            NonHuman = true,
-            NoStatus = true,
-            Contains = {},
-            Names = { "UAZ" },
-            Config = {
-                -- Box Settings
-                Boxes = true,
-                BoxColor = Color3.fromRGB(255, 150, 0),
-                BoxThickness = 1.5,
-
-
-                BoxFill = {
-                    Enabled = true,
-                    Color = Color3.fromRGB(255, 150, 0),
-                    Transparency = 0.8,
-                    Gradient = {
-                        Enabled = true,
-                        Color1 = Color3.fromRGB(255, 150, 0),
-                        Color2 = Color3.fromRGB(255, 255, 255),
-                        Color3 = Color3.fromRGB(255, 150, 0),
-                        Rotation = 0,
-                        Animated = true,
-                        Speed = 90,
-                        Direction = "Left",
-                    }
-                },
-
-                -- Text Settings
-                TextColor = Color3.fromRGB(255, 200, 50),
-                TextSize = 12,
-                TextOutline = true,
-                TextGap = 4,
-                Font = "Proggy Clean",
-
-                -- Distance Settings
-                Distance = {
-                    Enabled = true,
-                    Unit = "Meters",
-                    Ending = "m",
-                    Gap = 5,
-                    Color = Color3.fromRGB(255, 200, 50),
-                },
-
-                -- Chams Settings
-                Chams = {
-                    Enabled = true,
-                    Type = "Highlight",
-                    Highlight = {
-                        FillColor = Color3.fromRGB(255, 150, 0),
-                        FillTransparency = 0.7,
-                        OutlineColor = Color3.fromRGB(255, 255, 255),
-                        OutlineTransparency = 1,
-                        VisibleCheck = false,
-                    },
-                    Adornment = {
-                        Color = Color3.fromRGB(255, 150, 0),
-                        VisibleColor = Color3.fromRGB(0, 255, 0),
-                        Transparency = 0.5,
-                        AlwaysOnTop = true,
-                        VisibleCheck = true,
-                    }
-                },
-
-                -- Flags Settings
-                Flags = {
-                    Enabled = true,
-                    Position = "Left",
-                    SideGap = 4,
-                    TextGap = 2,
-                    Font = "Smallest Pixel-7",
-                    TextSize = 9,
-                    Options = {
-                        Idle = true,
-                        Moving = true,
-                    },
-                    Colors = {
-                        Idle = Color3.fromRGB(255, 255, 255),
-                        Moving = Color3.fromRGB(255, 150, 0),
-                    }
-                },
-
-                -- HealthBar Settings
-                HealthBar = {
-                    Enabled = true,
-                    Position = "Bottom",
-                    SideGap = 2,
-                    Width = 2,
-                    ShowText = true,
-                    TextFollowBar = true,
-                    HideWhenFullHP = false,
-                    FollowGradientColorText = true,
-                    Outline = {
-                        Style = "Full",
-                        Color = Color3.fromRGB(0, 0, 0),
-                    },
-                    Gradient = {
-                        Enabled = true,
-                        Color1 = Color3.fromRGB(0, 255, 0),
-                        Color2 = Color3.fromRGB(255, 255, 0),
-                        Color3 = Color3.fromRGB(255, 0, 0),
-                    }
-                },
-
-                -- Skeleton Settings (Template only, usually for players)
-                Skeleton = {
-                    Enabled = false,
-                    Color = Color3.fromRGB(255, 255, 255),
-                    Outline = true,
-                    OutlineColor = Color3.fromRGB(0, 0, 0),
-                }
-            }
-        },
-        {
-            DisplayName = "FPV Drone",
-            Path = "workspace",
-            Multiple = true,
-            Cheap = false,
-            NonHuman = true,
-            NoStatus = true,
-            Contains = {},
-            Names = { "FPVDrone" }
-        },
+        -- directories
+        Directories = {
         {
             DisplayName = "",
-            Path = "workspace.AiZones",
+            Path = "workspace.Characters",
             Multiple = true,
             Cheap = false,
-            NonHuman = false,
+            NonHuman = true,
             NoStatus = true,
-            Recursive = true,
             Contains = {},
-            BlockNames = { "OutpostClaymores", "OutpostLandmines", "ElectricityAnomaly" },
-            Names = { "" }
-        },
-        --[[
-            {
-                DisplayName = "CashRegister",
-                Path = "workspace",
-                Multiple = true,
-                Cheap = true,
-                Contains = {},
-                Names = {"CashRegister"}
-            },
-        ]]
+            Names = { "" },
+        }
     }
 }
 
@@ -1496,19 +1376,21 @@ local UpdateESPObj = LPHNoVirtualize(function(espObj, position, size, name, dist
     local x, y = math.floor(px - sx / 2), math.floor(py - sy / 2)
 
     -- Get Health Early for Layout Offsets
-    local health, maxHealth, healthPercent = 100, 100, 1
+    local health, maxHealth = 100, 100
     if humanoid then
         health = humanoid.Health
         maxHealth = humanoid.MaxHealth
-        healthPercent = math.clamp(health / maxHealth, 0, 1)
+    else
+        health, maxHealth = GetCustomHealth(instance)
     end
+    local healthPercent = math.clamp(health / maxHealth, 0, 1)
 
     -- Offsets for HealthBar
     local topOffset = 0
     local bottomOffset = 0
     local leftOffset = 0
     local rightOffset = 0
-    if GetCfg("HealthBar.Enabled") and instance:IsA("Model") and humanoid then
+    if GetCfg("HealthBar.Enabled") and instance:IsA("Model") then
         local hpPos = GetCfg("HealthBar.Position")
         local thickness = GetCfg("HealthBar.Width") + 2 + GetCfg("HealthBar.SideGap")
         local isRight = GetCfg("Flags.Position") == "Right"
@@ -1660,22 +1542,31 @@ local UpdateESPObj = LPHNoVirtualize(function(espObj, position, size, name, dist
     local leftTags = {}
     local rightTags = {}
 
-    if GetCfg("TeamIndicator.Enabled") and teamOwner and teamOwner.Team then
-        local teamColor = GetCfg("TeamIndicator.UseTeamColor") and teamOwner.TeamColor.Color or
-        GetCfg("TeamIndicator.Color")
-        local teamName = teamOwner.Team.Name
-        local compactTeam = GetCfg("TeamIndicator.Compact") and CompactTeamName(teamName) or teamName
-        local teamTag = string.format('<font color="%s">[%s]</font>', ColorToHex(teamColor), compactTeam)
-        if GetCfg("TeamIndicator.Position") == "Left" then
-            table.insert(leftTags, teamTag)
+    if GetCfg("TeamIndicator.Enabled") then
+        local teamName, teamColor
+        
+        if teamOwner and teamOwner.Team then
+            teamName = teamOwner.Team.Name
+            teamColor = GetCfg("TeamIndicator.UseTeamColor") and teamOwner.TeamColor.Color or GetCfg("TeamIndicator.Color")
         else
-            table.insert(rightTags, teamTag)
+            -- Apply custom team check for non-humanoid/non-player models
+            teamName, teamColor = GetCustomTeam(instance) -- CUSTOM TEAM GETTER
+        end
+
+        if teamName and teamName ~= "" then
+            local compactTeam = GetCfg("TeamIndicator.Compact") and CompactTeamName(teamName) or teamName
+            local teamTag = string.format('<font color="%s">[%s]</font>', ColorToHex(teamColor), compactTeam)
+            if GetCfg("TeamIndicator.Position") == "Left" then
+                table.insert(leftTags, teamTag)
+            else
+                table.insert(rightTags, teamTag)
+            end
         end
     end
 
     local isFriendly = false
     if teamOwner and GetCfg("FriendlyIndicator.Enabled") then
-        if GetCfg("FriendlyIndicator.CheckTeam") and teamOwner.Team == "Spectator" then
+        if GetCfg("FriendlyIndicator.CheckTeam") and LocalPlayer.Team ~= nil and teamOwner.Team == LocalPlayer.Team then
             isFriendly = true
         end
         if not isFriendly and GetCfg("FriendlyIndicator.CheckFriends") then
@@ -1735,27 +1626,9 @@ local UpdateESPObj = LPHNoVirtualize(function(espObj, position, size, name, dist
 
     -- Weapon logic
     if GetCfg("Weapon.Enabled") then
-        local weaponName = nil
+        local weaponName = GetCustomWeapon(instance) -- CUSTOM TOOL GETTER
 
-        -- Simple 'Holding' check
-        local holding = instance:FindFirstChild("Holding")
-        if holding then
-            if holding:IsA("ValueBase") then
-                if holding.Value then
-                    weaponName = tostring(holding.Value)
-                end
-            else
-                weaponName = holding.Name
-            end
-        end
-
-        -- Fallback
-        if (not weaponName or weaponName == "" or weaponName == "nil") and GetCfg("Weapon.UseToolFallback") then
-            local tool = instance:FindFirstChildWhichIsA("Tool")
-            if tool then weaponName = tool.Name end
-        end
-
-        if weaponName and weaponName ~= "" and weaponName ~= "nil" then
+        if weaponName and weaponName ~= "" and weaponName ~= "nil" and weaponName ~= "None" then
             espObj.WeaponText.Visible = true
             espObj.WeaponText.Text = weaponName
             espObj.WeaponText.Position = UDim2.new(0, px - 50, 0, currentBottomY)
@@ -1765,9 +1638,8 @@ local UpdateESPObj = LPHNoVirtualize(function(espObj, position, size, name, dist
     else
         espObj.WeaponText.Visible = false
     end
-
     -- HealthBar logic
-    if GetCfg("HealthBar.Enabled") and instance:IsA("Model") and humanoid then
+    if GetCfg("HealthBar.Enabled") and instance:IsA("Model") then
         -- Positioning
         local hpPos = GetCfg("HealthBar.Position")
         local isHorizontal = (hpPos == "Top" or hpPos == "Bottom")
@@ -2165,6 +2037,7 @@ end
 local ScanDirectories = LPHNoVirtualize(function()
     local newTracked = {}
 
+    -- Only scans players if explicitly enabled in the configuration
     if ESPConfig.Players then
         for _, player in ipairs(Players:GetPlayers()) do
             if not ESPConfig.LocalPlayer and player == LocalPlayer then continue end
@@ -2177,6 +2050,7 @@ local ScanDirectories = LPHNoVirtualize(function()
         end
     end
 
+    -- Scan custom paths defined in the Directories table
     for key, config in pairs(ESPConfig.Directories) do
         local displayName = nil
         if type(config) == "table" and config.DisplayName and config.DisplayName ~= "" then
@@ -2194,6 +2068,7 @@ local ScanDirectories = LPHNoVirtualize(function()
             local path = config.Path
             if not path then continue end
             local inst = GetInstanceFromPath(path)
+            
             if not inst then continue end
 
             local isCheap = config.Cheap or false
@@ -2206,7 +2081,6 @@ local ScanDirectories = LPHNoVirtualize(function()
                 local children = isRecursive and inst:GetDescendants() or inst:GetChildren()
                 for _, child in ipairs(children) do
                     if (child:IsA("Model") or child:IsA("BasePart")) then
-                        -- Optimization: If we already tracked an ancestor of this object in this scan, skip it
                         local hasTrackedAncestor = false
                         local p = child.Parent
                         while p and p ~= inst and p ~= game do
@@ -2218,8 +2092,17 @@ local ScanDirectories = LPHNoVirtualize(function()
                         end
 
                         if not hasTrackedAncestor and CheckNames(child, config.Names) and CheckContains(child, config.Contains) and not CheckBlockNames(child, config.BlockNames) then
+                            -- Check if alive (supports both Humanoid and custom health)
                             local humanoid = child:FindFirstChild("Humanoid")
-                            if nonHuman or (not humanoid or humanoid.Health > 0) then
+                            local isAlive = true
+                            if humanoid then
+                                isAlive = humanoid.Health > 0
+                            elseif nonHuman then
+                                local curHp = GetCustomHealth(child)
+                                isAlive = curHp > 0
+                            end
+
+                            if isAlive then
                                 local actualName = (displayName and displayName ~= "") and displayName or child.Name
                                 newTracked[child] = {
                                     name = actualName,
@@ -2235,7 +2118,15 @@ local ScanDirectories = LPHNoVirtualize(function()
             else
                 if CheckNames(inst, config.Names) and CheckContains(inst, config.Contains) and not CheckBlockNames(inst, config.BlockNames) then
                     local humanoid = inst:FindFirstChild("Humanoid")
-                    if nonHuman or (not humanoid or humanoid.Health > 0) then
+                    local isAlive = true
+                    if humanoid then
+                        isAlive = humanoid.Health > 0
+                    elseif nonHuman then
+                        local curHp = GetCustomHealth(inst)
+                        isAlive = curHp > 0
+                    end
+
+                    if isAlive then
                         local actualName = (displayName and displayName ~= "") and displayName or inst.Name
                         newTracked[inst] = {
                             name = actualName,
@@ -2250,6 +2141,7 @@ local ScanDirectories = LPHNoVirtualize(function()
         end
     end
 
+    -- Sync changes
     for inst, data in pairs(newTracked) do
         if not TrackedInstances[inst] then
             TrackedInstances[inst] = {
@@ -2319,7 +2211,14 @@ local function RuntimeStep()
         end
 
         local humanoid = not data.NonHuman and inst:FindFirstChild("Humanoid") or nil
-        if humanoid and humanoid.Health <= 0 then
+        local hp = 100
+        if humanoid then
+            hp = humanoid.Health
+        elseif data.NonHuman then
+            hp = GetCustomHealth(inst)
+        end
+
+        if hp <= 0 then
             data.espObj:Destroy()
             TrackedInstances[inst] = nil
             continue
