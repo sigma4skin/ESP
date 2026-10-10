@@ -92,6 +92,7 @@ local function GetCustomTeam(Character)
         Color = Color3.fromRGB(29, 128, 242)
     end
 
+    print(Team)
     return Team, Color
 end
 
@@ -2118,7 +2119,7 @@ local ScanDirectories = LPHNoVirtualize(function()
                                 -- Teammate Check
                                 if isAlive and ESPConfig.FilterTeammates then
                                     local owner = Players:GetPlayerFromCharacter(child)
-                                    if owner and LocalPlayer.Team and owner.Team == LocalPlayer.Team then
+                                    if owner and LocalPlayer.Character and GetCustomTeam(child) and GetCustomTeam(child) == GetCustomTeam(LocalPlayer.Character) then
                                         isAlive = false
                                     end
                                 end
@@ -2161,7 +2162,7 @@ local ScanDirectories = LPHNoVirtualize(function()
                     -- Teammate Check
                     if isAlive and ESPConfig.FilterTeammates then
                         local owner = Players:GetPlayerFromCharacter(inst)
-                        if owner and LocalPlayer.Team and owner.Team == LocalPlayer.Team then
+                        if owner and LocalPlayer.Character and GetCustomTeam(inst) and GetCustomTeam(inst) == GetCustomTeam(LocalPlayer.Character) then
                             isAlive = false
                         end
                     end
@@ -2357,5 +2358,52 @@ end
 getgenv().SensoryESP_Unload = function()
     ESP:Unload()
 end
+
+ESP:Load({
+    Enabled = true,
+    Boxes = true,
+    BoxType = "Normal",
+    BoxColor = Color3.fromRGB(255, 255, 255),
+    
+    Names = true,
+    TextColor = Color3.fromRGB(255, 255, 255),
+    
+    Distance = {
+        Enabled = true,
+        Unit = "Studs",
+    },
+
+    HealthBar = {
+        Enabled = true,
+        Position = "Left",
+        ShowText = false,
+    },
+
+    TeamIndicator = {
+        Enabled = true,
+        Position = "Right",
+    },
+
+    Weapon = {
+        Enabled = true,
+    },
+
+    Chams = {
+        Enabled = true,
+        Type = "Adornment", -- "Highlight" or "Adornment"
+    },
+
+    Directories = {
+        {
+            DisplayName = "",
+            Path = "workspace.Characters",
+            Multiple = true,
+            Cheap = false,
+            NonHuman = true,
+            NoStatus = true,
+            Names = { "" },
+        }
+    }
+})
 
 return ESP
