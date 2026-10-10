@@ -280,6 +280,7 @@ local ESPConfig = {
     TextSize = 12,
     TextColor = Color3.fromRGB(255, 255, 255),
     TextOutline = true,
+	TextOutlineColor = Color3.fromRGB(0, 0, 0), -- ADD THIS LINE
     TextOutlineStyle = "Full", -- "Full", "None"
     TextGap = 3,
     Font = "Proggy Clean",
@@ -2106,36 +2107,38 @@ local ScanDirectories = LPHNoVirtualize(function()
                                 isAlive = curHp > 0
                             end
 
-                        if isAlive then
-                            -- LocalPlayer Check
-                            if not ESPConfig.LocalPlayer then
-                                local owner = Players:GetPlayerFromCharacter(child)
-                                if owner == LocalPlayer then
-                                    isAlive = false
-                                end
-                            end
-
-                            -- Teammate Check (NEW)
-                            if isAlive and ESPConfig.FilterTeammates then
-                                local owner = Players:GetPlayerFromCharacter(child)
-                                if owner and LocalPlayer.Team and owner.Team == LocalPlayer.Team then
-                                    isAlive = false
-                                end
-                            end
-
                             if isAlive then
-                                local actualName = (displayName and displayName ~= "") and displayName or child.Name
-                                newTracked[child] = {
-                                    name = actualName,
-                                    Cheap = isCheap,
-                                    NonHuman = nonHuman,
-                                    NoStatus = noStatus,
-                                    Config = customConfig
-                                }
+                                -- LocalPlayer Check
+                                if not ESPConfig.LocalPlayer then
+                                    local owner = Players:GetPlayerFromCharacter(child)
+                                    if owner == LocalPlayer then
+                                        isAlive = false
+                                    end
+                                end
+
+                                -- Teammate Check
+                                if isAlive and ESPConfig.FilterTeammates then
+                                    local owner = Players:GetPlayerFromCharacter(child)
+                                    if owner and LocalPlayer.Team and owner.Team == LocalPlayer.Team then
+                                        isAlive = false
+                                    end
+                                end
+
+                                if isAlive then
+                                    local actualName = (displayName and displayName ~= "") and displayName or child.Name
+                                    newTracked[child] = {
+                                        name = actualName,
+                                        Cheap = isCheap,
+                                        NonHuman = nonHuman,
+                                        NoStatus = noStatus,
+                                        Config = customConfig
+                                    }
+                                end
                             end
                         end
                     end
-                end
+                end -- FIX: Closed 'for _, child' loop
+                end -- FIX: Closed 'if (child:IsA...)' check
             else
                 if CheckNames(inst, config.Names) and CheckContains(inst, config.Contains) and not CheckBlockNames(inst, config.BlockNames) then
                     local humanoid = inst:FindFirstChild("Humanoid")
@@ -2147,35 +2150,36 @@ local ScanDirectories = LPHNoVirtualize(function()
                         isAlive = curHp > 0
                     end
 
-                if isAlive then
-                    -- LocalPlayer Check
-                    if not ESPConfig.LocalPlayer then
-                        local owner = Players:GetPlayerFromCharacter(inst)
-                        if owner == LocalPlayer then
-                            isAlive = false
-                        end
-                    end
-
-                    -- Teammate Check (NEW)
-                    if isAlive and ESPConfig.FilterTeammates then
-                        local owner = Players:GetPlayerFromCharacter(inst)
-                        if owner and LocalPlayer.Team and owner.Team == LocalPlayer.Team then
-                            isAlive = false
-                        end
-                    end
-
                     if isAlive then
-                        local actualName = (displayName and displayName ~= "") and displayName or inst.Name
-                        newTracked[inst] = {
-                            name = actualName,
-                            Cheap = isCheap,
-                            NonHuman = nonHuman,
-                            NoStatus = noStatus,
-                            Config = customConfig
-                        }
+                        -- LocalPlayer Check
+                        if not ESPConfig.LocalPlayer then
+                            local owner = Players:GetPlayerFromCharacter(inst)
+                            if owner == LocalPlayer then
+                                isAlive = false
+                            end
+                        end
+
+                        -- Teammate Check
+                        if isAlive and ESPConfig.FilterTeammates then
+                            local owner = Players:GetPlayerFromCharacter(inst)
+                            if owner and LocalPlayer.Team and owner.Team == LocalPlayer.Team then
+                                isAlive = false
+                            end
+                        end
+
+                        if isAlive then
+                            local actualName = (displayName and displayName ~= "") and displayName or inst.Name
+                            newTracked[inst] = {
+                                name = actualName,
+                                Cheap = isCheap,
+                                NonHuman = nonHuman,
+                                NoStatus = noStatus,
+                                Config = customConfig
+                            }
+                        end
                     end
                 end
-            end
+            end -- FIX: Closed 'if config.Multiple'
         end
     end
 
