@@ -216,6 +216,7 @@ local ESPConfig = {
     },
     Players = false,
     LocalPlayer = false,
+    FilterTeammates = true,
     LimitFPS = 120, -- Set to 0 to disable limit
     DynamicBoxes = true,
     DynamicBoxesCheap = false,           -- needs DynamicBoxes enabled, only tracks main parts
@@ -278,7 +279,7 @@ local ESPConfig = {
     Names = false,
     TextSize = 12,
     TextColor = Color3.fromRGB(255, 255, 255),
-    TextOutline = false,
+    TextOutline = true,
     TextOutlineStyle = "Full", -- "Full", "None"
     TextGap = 3,
     Font = "Proggy Clean",
@@ -1328,7 +1329,10 @@ local UpdateESPObj = LPHNoVirtualize(function(espObj, position, size, name, dist
     local textOutlineStyle = GetCfg("TextOutlineStyle")
     -- Backward compat: if TextOutline is explicitly false, treat as None
     if GetCfg("TextOutline") == false then textOutlineStyle = "None" end
-    local textOutlineColor = GetCfg("TextOutlineColor") or GetCfg("Outlines.Color")
+    local textOutlineColor = GetCfg("TextOutlineColor")
+    if not textOutlineColor then
+        textOutlineColor = GetCfg("Outlines.Color") or Color3.fromRGB(0, 0, 0)
+    end
 
     local t = GetCfg("BoxThickness")
     local o = GetCfg("Outlines.Thickness")
@@ -2102,6 +2106,23 @@ local ScanDirectories = LPHNoVirtualize(function()
                                 isAlive = curHp > 0
                             end
 
+                        if isAlive then
+                            -- LocalPlayer Check
+                            if not ESPConfig.LocalPlayer then
+                                local owner = Players:GetPlayerFromCharacter(child)
+                                if owner == LocalPlayer then
+                                    isAlive = false
+                                end
+                            end
+
+                            -- Teammate Check (NEW)
+                            if isAlive and ESPConfig.FilterTeammates then
+                                local owner = Players:GetPlayerFromCharacter(child)
+                                if owner and LocalPlayer.Team and owner.Team == LocalPlayer.Team then
+                                    isAlive = false
+                                end
+                            end
+
                             if isAlive then
                                 local actualName = (displayName and displayName ~= "") and displayName or child.Name
                                 newTracked[child] = {
@@ -2124,6 +2145,23 @@ local ScanDirectories = LPHNoVirtualize(function()
                     elseif nonHuman then
                         local curHp = GetCustomHealth(inst)
                         isAlive = curHp > 0
+                    end
+
+                if isAlive then
+                    -- LocalPlayer Check
+                    if not ESPConfig.LocalPlayer then
+                        local owner = Players:GetPlayerFromCharacter(inst)
+                        if owner == LocalPlayer then
+                            isAlive = false
+                        end
+                    end
+
+                    -- Teammate Check (NEW)
+                    if isAlive and ESPConfig.FilterTeammates then
+                        local owner = Players:GetPlayerFromCharacter(inst)
+                        if owner and LocalPlayer.Team and owner.Team == LocalPlayer.Team then
+                            isAlive = false
+                        end
                     end
 
                     if isAlive then
