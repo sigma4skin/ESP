@@ -887,7 +887,6 @@ local CreateESPObj = LPHNoVirtualize(function(name)
     espObj.Destroy = function()
         container:Destroy()
         if espObj.Highlight then espObj.Highlight:Destroy() end
-        if espObj.MeshShell then espObj.MeshShell:Destroy() end
         for _, a in pairs(espObj.Adornments) do a:Destroy() end
         if espObj.ArrowInner then espObj.ArrowInner:Destroy() end
         if espObj.ArrowOutline then espObj.ArrowOutline:Destroy() end
@@ -2137,50 +2136,49 @@ local ScanDirectories = LPHNoVirtualize(function()
                             end
                         end
                     end
-                end -- FIX: Closed 'for _, child' loop
-                end -- FIX: Closed 'if (child:IsA...)' check
-            else
-                if CheckNames(inst, config.Names) and CheckContains(inst, config.Contains) and not CheckBlockNames(inst, config.BlockNames) then
-                    local humanoid = inst:FindFirstChild("Humanoid")
-                    local isAlive = true
-                    if humanoid then
-                        isAlive = humanoid.Health > 0
-                    elseif nonHuman then
-                        local curHp = GetCustomHealth(inst)
-                        isAlive = curHp > 0
+                end
+            end
+        else
+            if CheckNames(inst, config.Names) and CheckContains(inst, config.Contains) and not CheckBlockNames(inst, config.BlockNames) then
+                local humanoid = inst:FindFirstChild("Humanoid")
+                local isAlive = true
+                if humanoid then
+                    isAlive = humanoid.Health > 0
+                elseif nonHuman then
+                    local curHp = GetCustomHealth(inst)
+                    isAlive = curHp > 0
+                end
+
+                if isAlive then
+                    -- LocalPlayer Check
+                    if not ESPConfig.LocalPlayer then
+                        local owner = Players:GetPlayerFromCharacter(inst)
+                        if owner == LocalPlayer then
+                            isAlive = false
+                        end
+                    end
+
+                    -- Teammate Check
+                    if isAlive and ESPConfig.FilterTeammates then
+                        local owner = Players:GetPlayerFromCharacter(inst)
+                        if owner and LocalPlayer.Team and owner.Team == LocalPlayer.Team then
+                            isAlive = false
+                        end
                     end
 
                     if isAlive then
-                        -- LocalPlayer Check
-                        if not ESPConfig.LocalPlayer then
-                            local owner = Players:GetPlayerFromCharacter(inst)
-                            if owner == LocalPlayer then
-                                isAlive = false
-                            end
-                        end
-
-                        -- Teammate Check
-                        if isAlive and ESPConfig.FilterTeammates then
-                            local owner = Players:GetPlayerFromCharacter(inst)
-                            if owner and LocalPlayer.Team and owner.Team == LocalPlayer.Team then
-                                isAlive = false
-                            end
-                        end
-
-                        if isAlive then
-                            local actualName = (displayName and displayName ~= "") and displayName or inst.Name
-                            newTracked[inst] = {
-                                name = actualName,
-                                Cheap = isCheap,
-                                NonHuman = nonHuman,
-                                NoStatus = noStatus,
-                                Config = customConfig
-                            }
-                        end
+                        local actualName = (displayName and displayName ~= "") and displayName or inst.Name
+                        newTracked[inst] = {
+                            name = actualName,
+                            Cheap = isCheap,
+                            NonHuman = nonHuman,
+                            NoStatus = noStatus,
+                            Config = customConfig
+                        }
                     end
                 end
-            end -- FIX: Closed 'if config.Multiple'
-        end
+            end
+        end -- FIX: Closed 'if config.Multiple'
     end
 
     -- Sync changes
